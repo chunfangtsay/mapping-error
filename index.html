@@ -131,13 +131,24 @@ function createHandles(){
 
 function update(){
 
-    const handles = handlesGroup.querySelectorAll("circle");
+    const handles = handlesGroup.querySelectorAll("rect");
 
     points.forEach((p,i)=>{
+
     if(handles[i]){
-        handles[i].setAttribute("x", p.x - 6);
-        handles[i].setAttribute("y", p.y - 6);
+
+        handles[i].setAttribute(
+            "x",
+            p.x - 4
+        );
+
+        handles[i].setAttribute(
+            "y",
+            p.y - 4
+        );
+
     }
+
 });
 
     border.setAttribute(
