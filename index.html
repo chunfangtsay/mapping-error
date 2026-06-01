@@ -38,11 +38,16 @@ svg{width:100%;height:100%;}
 
 <svg id="svg">
     <image
-        id="photo"
-        href="clock.png"
-        preserveAspectRatio="none"
-        filter="url(#warpFilter)">
-    </image>
+    id="photoLeft"
+    href="clock.png"
+    preserveAspectRatio="none">
+</image>
+
+<image
+    id="photoRight"
+    href="clock.png"
+    preserveAspectRatio="none">
+</image>
 
     <defs>
         <filter id="warpFilter">
@@ -66,7 +71,11 @@ svg{width:100%;height:100%;}
 
 <script>
 const svg = document.getElementById("svg");
-const photo = document.getElementById("photo");
+const photoLeft =
+    document.getElementById("photoLeft");
+
+const photoRight =
+    document.getElementById("photoRight");
 const border = document.getElementById("border");
 const handlesGroup = document.getElementById("handles");
 const displace = document.getElementById("displace");
@@ -77,8 +86,8 @@ let points = [];
 function initializeCenteredImage(){
     const rect = svg.getBoundingClientRect();
 
-    const width = 500;
-    const height = 350;
+    const width = 350;
+const height = 245;
 
     const left = (rect.width - width) / 2;
     const top = (rect.height - height) / 2;
@@ -165,10 +174,51 @@ function update(){
     const width=((tr.x-tl.x)+(br.x-bl.x))/2;
     const height=((bl.y-tl.y)+(br.y-tr.y))/2;
 
-    photo.setAttribute("x",tl.x);
-    photo.setAttribute("y",tl.y);
-    photo.setAttribute("width",width);
-    photo.setAttribute("height",height);
+    // 左邊圖片
+
+photoLeft.setAttribute(
+    "x",
+    tl.x
+);
+
+photoLeft.setAttribute(
+    "y",
+    tl.y
+);
+
+photoLeft.setAttribute(
+    "width",
+    width
+);
+
+photoLeft.setAttribute(
+    "height",
+    height
+);
+
+// 右邊圖片
+
+const gap = 150;
+
+photoRight.setAttribute(
+    "x",
+    tl.x + width + gap
+);
+
+photoRight.setAttribute(
+    "y",
+    tl.y
+);
+
+photoRight.setAttribute(
+    "width",
+    width
+);
+
+photoRight.setAttribute(
+    "height",
+    height
+);
 
     const skewAmount =
         Math.abs(tl.x-tr.x) +
