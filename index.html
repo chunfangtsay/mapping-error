@@ -16,21 +16,21 @@ html,body{
 svg{width:100%;height:100%;}
 .handle{
     fill:white;
-    stroke:black;
-    stroke-width:1.5;
+    stroke:white;
+    stroke-width:2;
     cursor:move;
 }
 
 .mid{
     fill:none;
     stroke:white;
-    stroke-width:4;
+    stroke-width:2;
 }
 
 .border{
     fill:none;
     stroke:white;
-    stroke-width:1.5;
+    stroke-width:2;
 }
 </style>
 </head>
@@ -98,16 +98,20 @@ function initializeCenteredImage(){
 }
 
 function createHandles(){
+
     handlesGroup.innerHTML="";
 
     points.forEach((p,index)=>{
+
         const c = document.createElementNS(
-            "http://www.w3.org/2000/svg","circle"
+            "http://www.w3.org/2000/svg",
+            "rect"
         );
 
-        c.setAttribute("cx",p.x);
-        c.setAttribute("cy",p.y);
-        c.setAttribute("r",8);
+        c.setAttribute("x", p.x - 4);
+        c.setAttribute("y", p.y - 4);
+        c.setAttribute("width", 8);
+        c.setAttribute("height", 8);
 
         c.classList.add("handle");
 
@@ -120,7 +124,9 @@ function createHandles(){
         });
 
         handlesGroup.appendChild(c);
+
     });
+
 }
 
 function update(){
@@ -128,11 +134,11 @@ function update(){
     const handles = handlesGroup.querySelectorAll("circle");
 
     points.forEach((p,i)=>{
-        if(handles[i]){
-            handles[i].setAttribute("cx",p.x);
-            handles[i].setAttribute("cy",p.y);
-        }
-    });
+    if(handles[i]){
+        handles[i].setAttribute("x", p.x - 6);
+        handles[i].setAttribute("y", p.y - 6);
+    }
+});
 
     border.setAttribute(
         "points",
