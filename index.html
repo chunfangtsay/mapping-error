@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Warp Editor</title>
+<style>
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#1a1a1a;
+    font-family:sans-serif;
+}
+svg{width:100%;height:100%;}
+.handle{
+    fill:#ff4444;
+    stroke:white;
+    stroke-width:2;
+    cursor:move;
+}
+.mid{fill:#ffaa00;}
+.border{
+    fill:none;
+    stroke:#00ff88;
+    stroke-width:2;
+}
+</style>
+</head>
+<body>
+
+<svg id="svg">
+    <image
+        id="photo"
+        href="myphoto.jpg"
+        preserveAspectRatio="none"
+        filter="url(#warpFilter)">
+    </image>
+
+    <defs>
+        <filter id="warpFilter">
+            <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.01"
+                numOctaves="1"
+                result="noise"/>
+            <feDisplacementMap
+                id="displace"
+                in="SourceGraphic"
+                in2="noise"
+                scale="0"/>
+        </filter>
+    </defs>
+
+    <polygon id="border" class="border"></polygon>
+    <g id="handles"></g>
+</svg>
+
+<script>
+const svg = document.getElementById("svg");
+const photo = document.getElementById("photo");
+const border = document.getElementById("border");
+const handlesGroup = document.getElementById("handles");
+const displace = document.getElementById("displace");
+
+let activeHandle = null;
+let points = [];
+
+function initializeCenteredImage(){
+    const rect = svg.getBoundingClientRect();
+
+    const width = 500;
+    const height = 350;
+
+    const left = (rect.width - width) / 2;
+    const top = (rect.height - height) / 2;
+
+    points = [
+        {x:left, y:top},
+        {x:left + width/2, y:top},
+        {x:left + width, y:top},
+        {x:left + width, y:top + height/2},
+        {x:left + width, y:top + height},
+        {x:left + width/2, y:top + height},
+        {x:left, y:top + height},
+        {x:left, y:top + height/2}
+    ];
+
+    createHandles();
+    update();
+}
+
+function createHandles(){
+    handlesGroup.innerHTML="";
+
+    points.forEach((p,index)=>{
+        const c = document.createElementNS(
+            "http://www.w3.org/2000/svg","circle"
+        );
+
+        c.setAttribute("cx",p.x);
+        c.setAttribute("cy",p.y);
+        c.setAttribute("r",8);
+
+        c.classList.add("handle");
+
+        if([1,3,5,7].includes(index)){
+            c.classList.add("mid");
+        }
+
+        c.addEventListener("pointerdown",()=>{
+            activeHandle=index;
+        });
+
+        handlesGroup.appendChild(c);
+    });
+}
+
+function update(){
+
+    const handles = handlesGroup.querySelectorAll("circle");
+
+    points.forEach((p,i)=>{
+        if(handles[i]){
+            handles[i].setAttribute("cx",p.x);
+            handles[i].setAttribute("cy",p.y);
+        }
+    });
+
+    border.setAttribute(
+        "points",
+        points.map(p => `${p.x},${p.y}`).join(" ")
+    );
+
+    const tl=points[0];
+    const tr=points[2];
+    const br=points[4];
+    const bl=points[6];
+
+    const width=((tr.x-tl.x)+(br.x-bl.x))/2;
+    const height=((bl.y-tl.y)+(br.y-tr.y))/2;
+
+    photo.setAttribute("x",tl.x);
+    photo.setAttribute("y",tl.y);
+    photo.setAttribute("width",width);
+    photo.setAttribute("height",height);
+
+    const skewAmount =
+        Math.abs(tl.x-tr.x) +
+        Math.abs(bl.x-br.x) +
+        Math.abs(tl.y-bl.y) +
+        Math.abs(tr.y-br.y);
+
+    displace.setAttribute(
+        "scale",
+        Math.min(skewAmount/20,120)
+    );
+}
+
+window.addEventListener("pointermove",(e)=>{
+
+    if(activeHandle===null) return;
+
+    const rect = svg.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    switch(activeHandle){
+
+        case 1:
+            points[0].y = y;
+            points[1].y = y;
+            points[2].y = y;
+            break;
+
+        case 3:
+            points[2].x = x;
+            points[3].x = x;
+            points[4].x = x;
+            break;
+
+        case 5:
+            points[4].y = y;
+            points[5].y = y;
+            points[6].y = y;
+            break;
+
+        case 7:
+            points[0].x = x;
+            points[7].x = x;
+            points[6].x = x;
+            break;
+
+        default:
+            points[activeHandle].x = x;
+            points[activeHandle].y = y;
+    }
+
+    update();
+});
+
+window.addEventListener("pointerup",()=>{
+    activeHandle=null;
+});
+
+window.addEventListener("load", initializeCenteredImage);
+</script>
+
+</body>
+</html>
