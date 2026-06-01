@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Warp Editor</title>
+<title>Dual Image Warp Editor</title>
+
 <style>
 html,body{
     margin:0;
@@ -13,11 +14,22 @@ html,body{
     background:#1a1a1a;
     font-family:sans-serif;
 }
-svg{width:100%;height:100%;}
+
+svg{
+    width:100%;
+    height:100%;
+}
+
+.border{
+    fill:none;
+    stroke:white;
+    stroke-width:2;
+}
+
 .handle{
     fill:white;
     stroke:white;
-    stroke-width:2;
+    stroke-width:1;
     cursor:move;
 }
 
@@ -26,81 +38,117 @@ svg{width:100%;height:100%;}
     stroke:white;
     stroke-width:2;
 }
-
-.border{
-    fill:none;
-    stroke:white;
-    stroke-width:2;
-}
 </style>
 </head>
+
 <body>
 
 <svg id="svg">
-    <image
-    id="photoLeft"
-    href="clock.png"
-    preserveAspectRatio="none">
-</image>
-
-<image
-    id="photoRight"
-    href="clock.png"
-    preserveAspectRatio="none">
-</image>
 
     <defs>
+
         <filter id="warpFilter">
+
             <feTurbulence
                 type="fractalNoise"
                 baseFrequency="0.01"
                 numOctaves="1"
                 result="noise"/>
+
             <feDisplacementMap
                 id="displace"
                 in="SourceGraphic"
                 in2="noise"
                 scale="0"/>
+
         </filter>
+
     </defs>
 
+    <!-- 左圖 -->
+    <image
+        id="photoLeft"
+        href="clock.png"
+        preserveAspectRatio="none"
+        filter="url(#warpFilter)">
+    </image>
 
-    <polygon id="border" class="border"></polygon>
+    <!-- 右圖 -->
+    <image
+        id="photoRight"
+        href="clock.png"
+        preserveAspectRatio="none"
+        filter="url(#warpFilter)">
+    </image>
+
+    <polygon
+        id="border"
+        class="border">
+    </polygon>
+
     <g id="handles"></g>
+
 </svg>
 
 <script>
-const svg = document.getElementById("svg");
+
+const svg =
+    document.getElementById("svg");
+
 const photoLeft =
     document.getElementById("photoLeft");
 
 const photoRight =
     document.getElementById("photoRight");
-const border = document.getElementById("border");
-const handlesGroup = document.getElementById("handles");
-const displace = document.getElementById("displace");
+
+const border =
+    document.getElementById("border");
+
+const handlesGroup =
+    document.getElementById("handles");
+
+const displace =
+    document.getElementById("displace");
 
 let activeHandle = null;
 let points = [];
 
+const IMAGE_WIDTH = 350;
+const IMAGE_HEIGHT = 245;
+const GAP = 150;
+
 function initializeCenteredImage(){
-    const rect = svg.getBoundingClientRect();
 
-    const width = 350;
-const height = 245;
+    const rect =
+        svg.getBoundingClientRect();
 
-    const left = (rect.width - width) / 2;
-    const top = (rect.height - height) / 2;
+    const totalWidth =
+        IMAGE_WIDTH +
+        GAP +
+        IMAGE_WIDTH;
+
+    const left =
+        (rect.width - totalWidth) / 2;
+
+    const top =
+        (rect.height - IMAGE_HEIGHT) / 2;
 
     points = [
+
         {x:left, y:top},
-        {x:left + width/2, y:top},
-        {x:left + width, y:top},
-        {x:left + width, y:top + height/2},
-        {x:left + width, y:top + height},
-        {x:left + width/2, y:top + height},
-        {x:left, y:top + height},
-        {x:left, y:top + height/2}
+        {x:left + IMAGE_WIDTH/2, y:top},
+        {x:left + IMAGE_WIDTH, y:top},
+
+        {x:left + IMAGE_WIDTH, y:top + IMAGE_HEIGHT/2},
+
+        {x:left + IMAGE_WIDTH, y:top + IMAGE_HEIGHT},
+
+        {x:left + IMAGE_WIDTH/2, y:top + IMAGE_HEIGHT},
+
+        {x:left, y:top + IMAGE_HEIGHT},
+
+        {x:left, y:top + IMAGE_HEIGHT/2}
+
     ];
 
     createHandles();
@@ -109,31 +157,46 @@ const height = 245;
 
 function createHandles(){
 
-    handlesGroup.innerHTML="";
+    handlesGroup.innerHTML = "";
 
     points.forEach((p,index)=>{
 
-        const c = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "rect"
+        const size = 8;
+
+        const handle =
+            document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "rect"
+            );
+
+        handle.setAttribute(
+            "width",
+            size
         );
 
-        c.setAttribute("x", p.x - 4);
-        c.setAttribute("y", p.y - 4);
-        c.setAttribute("width", 8);
-        c.setAttribute("height", 8);
+        handle.setAttribute(
+            "height",
+            size
+        );
 
-        c.classList.add("handle");
+        handle.classList.add(
+            "handle"
+        );
 
         if([1,3,5,7].includes(index)){
-            c.classList.add("mid");
+            handle.classList.add("mid");
         }
 
-        c.addEventListener("pointerdown",()=>{
-            activeHandle=index;
-        });
+        handle.addEventListener(
+            "pointerdown",
+            ()=>{
+                activeHandle = index;
+            }
+        );
 
-        handlesGroup.appendChild(c);
+        handlesGroup.appendChild(
+            handle
+        );
 
     });
 
@@ -141,11 +204,10 @@ function createHandles(){
 
 function update(){
 
-    const handles = handlesGroup.querySelectorAll("rect");
+    const handles =
+        handlesGroup.querySelectorAll("rect");
 
     points.forEach((p,i)=>{
-
-    if(handles[i]){
 
         handles[i].setAttribute(
             "x",
@@ -157,128 +219,164 @@ function update(){
             p.y - 4
         );
 
-    }
-
-});
+    });
 
     border.setAttribute(
         "points",
-        points.map(p => `${p.x},${p.y}`).join(" ")
+        points
+            .map(
+                p => `${p.x},${p.y}`
+            )
+            .join(" ")
     );
 
-    const tl=points[0];
-    const tr=points[2];
-    const br=points[4];
-    const bl=points[6];
+    const tl = points[0];
+    const tr = points[2];
+    const br = points[4];
+    const bl = points[6];
 
-    const width=((tr.x-tl.x)+(br.x-bl.x))/2;
-    const height=((bl.y-tl.y)+(br.y-tr.y))/2;
+    const width =
+        ((tr.x - tl.x) +
+         (br.x - bl.x)) / 2;
 
-    // 左邊圖片
+    const height =
+        ((bl.y - tl.y) +
+         (br.y - tr.y)) / 2;
 
-photoLeft.setAttribute(
-    "x",
-    tl.x
-);
+    photoLeft.setAttribute(
+        "x",
+        tl.x
+    );
 
-photoLeft.setAttribute(
-    "y",
-    tl.y
-);
+    photoLeft.setAttribute(
+        "y",
+        tl.y
+    );
 
-photoLeft.setAttribute(
-    "width",
-    width
-);
+    photoLeft.setAttribute(
+        "width",
+        width
+    );
 
-photoLeft.setAttribute(
-    "height",
-    height
-);
+    photoLeft.setAttribute(
+        "height",
+        height
+    );
 
-// 右邊圖片
+    photoRight.setAttribute(
+        "x",
+        tl.x + width + GAP
+    );
 
-const gap = 150;
+    photoRight.setAttribute(
+        "y",
+        tl.y
+    );
 
-photoRight.setAttribute(
-    "x",
-    tl.x + width + gap
-);
+    photoRight.setAttribute(
+        "width",
+        width
+    );
 
-photoRight.setAttribute(
-    "y",
-    tl.y
-);
+    photoRight.setAttribute(
+        "height",
+        height
+    );
 
-photoRight.setAttribute(
-    "width",
-    width
-);
+    /*
+        初始保持完全平整
+        拖動後才逐漸增加濾鏡強度
+    */
 
-photoRight.setAttribute(
-    "height",
-    height
-);
-
-    const skewAmount =
-        Math.abs(tl.x-tr.x) +
-        Math.abs(bl.x-br.x) +
-        Math.abs(tl.y-bl.y) +
-        Math.abs(tr.y-br.y);
+    const distortion =
+        Math.abs(points[0].y - points[2].y) +
+        Math.abs(points[6].y - points[4].y) +
+        Math.abs(points[0].x - points[6].x) +
+        Math.abs(points[2].x - points[4].x);
 
     displace.setAttribute(
         "scale",
-        Math.min(skewAmount/20,120)
+        Math.min(
+            distortion / 4,
+            40
+        )
     );
 }
 
-window.addEventListener("pointermove",(e)=>{
+window.addEventListener(
+    "pointermove",
+    (e)=>{
 
-    if(activeHandle===null) return;
+        if(activeHandle===null)
+            return;
 
-    const rect = svg.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+        const rect =
+            svg.getBoundingClientRect();
 
-    switch(activeHandle){
+        const x =
+            e.clientX - rect.left;
 
-        case 1:
-            points[0].y = y;
-            points[1].y = y;
-            points[2].y = y;
-            break;
+        const y =
+            e.clientY - rect.top;
 
-        case 3:
-            points[2].x = x;
-            points[3].x = x;
-            points[4].x = x;
-            break;
+        switch(activeHandle){
 
-        case 5:
-            points[4].y = y;
-            points[5].y = y;
-            points[6].y = y;
-            break;
+            case 1:
 
-        case 7:
-            points[0].x = x;
-            points[7].x = x;
-            points[6].x = x;
-            break;
+                points[0].y = y;
+                points[1].y = y;
+                points[2].y = y;
 
-        default:
-            points[activeHandle].x = x;
-            points[activeHandle].y = y;
+                break;
+
+            case 3:
+
+                points[2].x = x;
+                points[3].x = x;
+                points[4].x = x;
+
+                break;
+
+            case 5:
+
+                points[4].y = y;
+                points[5].y = y;
+                points[6].y = y;
+
+                break;
+
+            case 7:
+
+                points[0].x = x;
+                points[7].x = x;
+                points[6].x = x;
+
+                break;
+
+            default:
+
+                points[activeHandle].x = x;
+                points[activeHandle].y = y;
+
+        }
+
+        update();
+
     }
+);
 
-    update();
-});
+window.addEventListener(
+    "pointerup",
+    ()=>{
+        activeHandle = null;
+    }
+);
 
-window.addEventListener("pointerup",()=>{
-    activeHandle=null;
-});
+window.addEventListener(
+    "load",
+    initializeCenteredImage
+);
 
-window.addEventListener("load", initializeCenteredImage);
 </script>
 
 </body>
